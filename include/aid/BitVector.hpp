@@ -19,8 +19,9 @@
 #ifndef aid_BitVector_hpp
 #define aid_BitVector_hpp
 
-#include <cstdint>
 #include <climits>
+#include <cstdint>
+#include <functional>
 #include <stdexcept>
 #include <type_traits>
 
@@ -45,7 +46,7 @@ class BitVector
 		mask_type			mask;
 		std::uint_least8_t	offset;
 
-		constexpr Section(mask_type imask = 0, std::uint_least8_t ioffset = 0)
+		explicit constexpr Section(mask_type imask, std::uint_least8_t ioffset = 0)
 			: mask{imask}, offset{ioffset}
 		{}
 	};
@@ -84,14 +85,6 @@ class BitVector
 		: m_data{data}
 	{}
 
-	constexpr data_type get() const noexcept {
-		return m_data;
-	}
-
-	constexpr data_type get(const Section &section) const {
-		return (m_data & section.mask) >> section.offset;
-	}
-
 	void set(const Section &section, data_type value) {
 		data_type shifted_value = value << section.offset;
 #ifdef NDEBUG
@@ -104,9 +97,50 @@ class BitVector
 		m_data &= ~section.mask;
 		m_data |= shifted_value;
 	}
+
+	constexpr data_type get() const noexcept {
+		return m_data;
+	}
+
+	constexpr data_type get(const Section &section) const {
+		return (m_data & section.mask) >> section.offset;
+	}
+
+#define aid_BitVector_DEFINE_BINARY_OPERATOR(d_op) \
+	constexpr bool operator d_op(BitVector rhs) const noexcept { \
+		return m_data d_op rhs.m_data; \
+	}
+
+aid_BitVector_DEFINE_BINARY_OPERATOR(==)
+aid_BitVector_DEFINE_BINARY_OPERATOR(!=)
+aid_BitVector_DEFINE_BINARY_OPERATOR(<)
+aid_BitVector_DEFINE_BINARY_OPERATOR(<=)
+aid_BitVector_DEFINE_BINARY_OPERATOR(>)
+aid_BitVector_DEFINE_BINARY_OPERATOR(>=)
+
+#undef aid_BitVector_DEFINE_BINARY_OPERATOR
+
+  private:
+	constexpr std::size_t hash_code() const noexcept {
+		return std::hash<data_type>{}(m_data);
+	}
+
+	friend struct std::hash<BitVector>;
 }; // class BitVector
 
 } // namespace aid
+
+namespace std {
+
+template<typename DataType>
+struct hash<aid::BitVector<DataType>>
+{
+	constexpr size_t operator()(aid::BitVector<DataType> bvec) const noexcept {
+		return bvec.hash_code();
+	}
+};
+
+} // namespace std
 
 
 #endif // aid_BitVector_hpp

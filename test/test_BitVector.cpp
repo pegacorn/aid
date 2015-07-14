@@ -1,3 +1,4 @@
+// -*- tab-width: 4 -*-
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE BitVector
 #include <boost/mpl/list.hpp>
@@ -10,6 +11,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_set>
 
 using namespace std;
 using test_type_list = boost::mpl::list<unsigned char, unsigned short, unsigned int, unsigned long, unsigned long long, uintmax_t>;
@@ -80,61 +82,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(constructor_1, test_type, test_type_list)
 		constexpr test_type ff{static_cast<test_type>(m1)};
 		BVec bvec{ff};
 		BOOST_CHECK_EQUAL(ff, bvec.get());
-	}
-}
-
-BOOST_AUTO_TEST_CASE_TEMPLATE(get_1, test_type, test_type_list)
-{
-	using BVec = aid::BitVector<test_type>;
-	constexpr test_type msb{sizeof(test_type) * CHAR_BIT - 1};
-	constexpr typename make_signed<test_type>::type m1{-1};
-	constexpr test_type ff{static_cast<test_type>(m1)};
-
-	{
-		{
-			constexpr auto sec = BVec::create_section(0);
-			constexpr BVec bvec{ff};
-			BOOST_CHECK_EQUAL(1, bvec.get(sec));
-		}
-		{
-			constexpr auto sec = BVec::create_section(1);
-			constexpr BVec bvec{ff};
-			BOOST_CHECK_EQUAL(1, bvec.get(sec));
-		}
-		{
-			constexpr auto sec = BVec::create_section(msb);
-			constexpr BVec bvec{ff};
-			BOOST_CHECK_EQUAL(1, bvec.get(sec));
-		}
-	}
-	{
-		{
-			constexpr auto sec = BVec::create_section(0, 1);
-			constexpr BVec bvec{ff};
-			BOOST_CHECK_EQUAL(3, bvec.get(sec));
-		}
-		{
-			constexpr auto sec = BVec::create_section(1, 2);
-			constexpr BVec bvec{ff};
-			BOOST_CHECK_EQUAL(3, bvec.get(sec));
-		}
-		{
-			constexpr auto sec = BVec::create_section(msb - 1, msb);
-			constexpr BVec bvec{ff};
-			BOOST_CHECK_EQUAL(3, bvec.get(sec));
-		}
-	}
-	{
-		{
-			constexpr auto sec = BVec::create_section(0, 1);
-			constexpr BVec bvec{0x05};
-			BOOST_CHECK_EQUAL(1, bvec.get(sec));
-		}
-		{
-			constexpr auto sec = BVec::create_section(1, 2);
-			constexpr BVec bvec{0x05};
-			BOOST_CHECK_EQUAL(2, bvec.get(sec));
-		}
 	}
 }
 
@@ -283,5 +230,104 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(set_e1, test_type, test_type_list)
 #else
 		BOOST_CHECK_THROW(bvec.set(sec, 2), overflow_error);
 #endif
+	}
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(get_1, test_type, test_type_list)
+{
+	using BVec = aid::BitVector<test_type>;
+	constexpr test_type msb{sizeof(test_type) * CHAR_BIT - 1};
+	constexpr typename make_signed<test_type>::type m1{-1};
+	constexpr test_type ff{static_cast<test_type>(m1)};
+
+	{
+		{
+			constexpr auto sec = BVec::create_section(0);
+			constexpr BVec bvec{ff};
+			BOOST_CHECK_EQUAL(1, bvec.get(sec));
+		}
+		{
+			constexpr auto sec = BVec::create_section(1);
+			constexpr BVec bvec{ff};
+			BOOST_CHECK_EQUAL(1, bvec.get(sec));
+		}
+		{
+			constexpr auto sec = BVec::create_section(msb);
+			constexpr BVec bvec{ff};
+			BOOST_CHECK_EQUAL(1, bvec.get(sec));
+		}
+	}
+	{
+		{
+			constexpr auto sec = BVec::create_section(0, 1);
+			constexpr BVec bvec{ff};
+			BOOST_CHECK_EQUAL(3, bvec.get(sec));
+		}
+		{
+			constexpr auto sec = BVec::create_section(1, 2);
+			constexpr BVec bvec{ff};
+			BOOST_CHECK_EQUAL(3, bvec.get(sec));
+		}
+		{
+			constexpr auto sec = BVec::create_section(msb - 1, msb);
+			constexpr BVec bvec{ff};
+			BOOST_CHECK_EQUAL(3, bvec.get(sec));
+		}
+	}
+	{
+		{
+			constexpr auto sec = BVec::create_section(0, 1);
+			constexpr BVec bvec{0x05};
+			BOOST_CHECK_EQUAL(1, bvec.get(sec));
+		}
+		{
+			constexpr auto sec = BVec::create_section(1, 2);
+			constexpr BVec bvec{0x05};
+			BOOST_CHECK_EQUAL(2, bvec.get(sec));
+		}
+	}
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(compare_1, test_type, test_type_list)
+{
+	using BVec = aid::BitVector<test_type>;
+
+	{
+		BOOST_CHECK(  BVec{12} == BVec{12});
+		BOOST_CHECK(!(BVec{12} == BVec{13}));
+	}
+	{
+		BOOST_CHECK(!(BVec{12} != BVec{12}));
+		BOOST_CHECK(  BVec{12} != BVec{13});
+	}
+	{
+		BOOST_CHECK(!(BVec{12} < BVec{12}));
+		BOOST_CHECK(  BVec{12} < BVec{13});
+	}
+	{
+		BOOST_CHECK(!(BVec{12} <= BVec{11}));
+		BOOST_CHECK(  BVec{12} <= BVec{12});
+		BOOST_CHECK(  BVec{12} <= BVec{13});
+	}
+	{
+		BOOST_CHECK(  BVec{12} > BVec{11});
+		BOOST_CHECK(!(BVec{12} > BVec{12}));
+	}
+	{
+		BOOST_CHECK(  BVec{12} >= BVec{11});
+		BOOST_CHECK(  BVec{12} >= BVec{12});
+		BOOST_CHECK(!(BVec{12} >= BVec{13}));
+	}
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(hash_1, test_type, test_type_list)
+{
+	using BVec = aid::BitVector<test_type>;
+	using Set = unordered_set<BVec>;
+
+	Set s;
+	for ( test_type i = 0; i < 10; ++i ) {
+		s.insert(BVec{i});
+		BOOST_CHECK_EQUAL(s.size(), i + 1);
 	}
 }
