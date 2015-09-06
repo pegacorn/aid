@@ -355,6 +355,31 @@ class EndianConverter
 	}
 }; // class EndianConverter
 
+#define aid_DEFINE_EndianConverter_external(DModifier, d_external_type, DInteger) \
+	DModifier template void EndianConverter<d_external_type>::to_external(DInteger, unsigned char *, std::size_t); \
+	DModifier template void EndianConverter<d_external_type>::from_external(const unsigned char *, std::size_t, DInteger &)
+#define aid_DEFINE_EndianConverter(DModifier, d_external_type) \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, char); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, wchar_t); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, char16_t); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, char32_t); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, unsigned char); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, signed char); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, unsigned short); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, short); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, unsigned int); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, int); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, unsigned long); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, long); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, unsigned long long); \
+	aid_DEFINE_EndianConverter_external(DModifier, d_external_type, long long)
+
+aid_DEFINE_EndianConverter(extern, EndianType::little);
+aid_DEFINE_EndianConverter(extern, EndianType::big);
+
+//#undef aid_DEFINE_EndianConverter
+//#undef aid_DEFINE_EndianConverter_external
+
 } // namespace aid
 
 

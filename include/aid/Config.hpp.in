@@ -25,8 +25,7 @@
 #define AID_ENDIAN_LITTLE	4321
 #define AID_ENDIAN_BIG		1234
 
-// TODO: auto detect
-#define AID_ENDIAN AID_ENDIAN_LITTLE
+#define AID_ENDIAN @AID_ENDIAN@
 
 
 #endif // aid_Config_hpp
