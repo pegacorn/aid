@@ -105,3 +105,24 @@ BOOST_AUTO_TEST_CASE(create_e1)
 	BOOST_CHECK_THROW(factory.create("MyProductB", 3, 4.5),
 					  MyFactory::error_policy_type::Exception);
 }
+
+BOOST_AUTO_TEST_CASE(registered_ids_1)
+{
+	MyFactory factory;
+	BOOST_CHECK(factory.registered_ids().empty());
+	{
+		factory.register_creator("MyProductA", create_a);
+		const auto expected = vector<string>{"MyProductA"};
+		BOOST_CHECK(expected == factory.registered_ids());
+	}
+	{
+		factory.register_creator("MyProductB",
+			[](int i, double d) {
+				 return MyAbstractProductPtr(new MyProductB(i, d));
+			});
+		const auto expected = vector<string>{"MyProductA", "MyProductB"};	
+		BOOST_CHECK(expected == factory.registered_ids());
+	}
+	factory.clear_creator();
+	BOOST_CHECK(factory.registered_ids().empty());
+}

@@ -23,11 +23,12 @@
 #include <map>
 #include <memory>
 #include <utility>
+#include <vector>
 
 
 namespace aid {
 
-template<typename IdentifierType, class AbstractProductPtr>
+template<typename Identifier, class AbstractProductPtr>
 class DefaultFactoryError
 {
   public:
@@ -37,7 +38,7 @@ class DefaultFactoryError
 	};
 
   protected:
-	static AbstractProductPtr on_unknown_type(IdentifierType) {
+	static AbstractProductPtr on_unknown_type(Identifier) {
 		throw Exception();
 	}
 
@@ -46,37 +47,51 @@ class DefaultFactoryError
 }; // struct DefaultFactoryError
 
 
-template
-<
-	class AbstractProductPtr,
-	typename IdentifierType,
-	typename ProductCreator = AbstractProductPtr (*)(),
-	template<typename, class>
-	class FactoryErrorPolicy = DefaultFactoryError
->
+template<
+	class AbstractProductPtr
+	, typename Identifier
+	, typename ProductCreator = AbstractProductPtr (*)()
+	, template<typename, class> class FactoryErrorPolicy = DefaultFactoryError
+	>
 class Factory
-	: public FactoryErrorPolicy<IdentifierType, AbstractProductPtr>
+	: public FactoryErrorPolicy<Identifier, AbstractProductPtr>
 {
   private:
-	using IdToProductMap	= std::map<IdentifierType, ProductCreator>;
+	using IdToProductMap		= std::map<Identifier, ProductCreator>;
 
   public:
-	using error_policy_type	= FactoryErrorPolicy<IdentifierType, AbstractProductPtr>;
+	using abstract_product_ptr_type	= AbstractProductPtr;
+	using identifier_type			= Identifier;
+	using product_creator_type		= ProductCreator;
+	using error_policy_type			= FactoryErrorPolicy<Identifier, AbstractProductPtr>;
 
   private:
 	IdToProductMap	m_associations;
 
   public:
-	bool register_creator(const IdentifierType &id, ProductCreator creator) {
+	bool register_creator(const identifier_type &id, product_creator_type creator) {
 		return m_associations.insert(std::make_pair(id, creator)).second;
 	}
 
-	bool unregister_creator(const IdentifierType &id) {
+	bool unregister_creator(const identifier_type &id) {
 		return m_associations.erase(id) != 0;
 	}
 
+	std::vector<identifier_type> registered_ids() const {
+		std::vector<identifier_type> ids;
+		ids.reserve(m_associations.size());
+		for ( const auto &association : m_associations ) {
+			ids.push_back(association.first);
+		}
+		return ids;
+	}
+
+	void clear_creator() {
+		m_associations.clear();
+	}
+
 	template<typename... Args>
-	AbstractProductPtr create(const IdentifierType &id, Args &&... args) {
+	abstract_product_ptr_type create(const identifier_type &id, Args &&... args) const {
 		typename IdToProductMap::const_iterator i = m_associations.find(id);
 		if ( i == m_associations.end() ) {
 			return this->on_unknown_type(id);
