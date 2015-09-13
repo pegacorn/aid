@@ -25,14 +25,14 @@ namespace aid {
 class NonCopyable
 {
   protected:
-	constexpr NonCopyable() = default;
-	~NonCopyable() = default;
+	constexpr NonCopyable() noexcept = default;
+	~NonCopyable() noexcept = default;
 
 	NonCopyable(const NonCopyable &) = delete;
 	NonCopyable &operator=(const NonCopyable &) = delete;
 
-	NonCopyable(NonCopyable &&) = default;
-	NonCopyable &operator=(NonCopyable &&) = default;
+	NonCopyable(NonCopyable &&) noexcept = default;
+	NonCopyable &operator=(NonCopyable &&) noexcept = default;
 }; // class NonCopyable
 
 } // namespace aid

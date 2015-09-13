@@ -25,11 +25,11 @@ namespace aid {
 class NonMovable
 {
   protected:
-	constexpr NonMovable() = default;
-	~NonMovable() = default;
+	constexpr NonMovable() noexcept = default;
+	~NonMovable() noexcept = default;
 
-	NonMovable(const NonMovable &) = default;
-	NonMovable &operator=(const NonMovable &) = default;
+	NonMovable(const NonMovable &) noexcept = default;
+	NonMovable &operator=(const NonMovable &) noexcept = default;
 
 	NonMovable(NonMovable &&) = delete;
 	NonMovable &operator=(NonMovable &&) = delete;
