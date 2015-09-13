@@ -79,7 +79,7 @@ struct Converter<EndianType::big, EndianType::little>
 	template<typename Integer>
 	static void to_external(Integer native, unsigned char *external, std::size_t size) {
 		const unsigned char * const msbyte = reinterpret_cast<const unsigned char *>(&native) + size - 1;
-		for ( std::size_t i = 0; i < size; ++i ) {
+		for ( std::size_t i{0}; i < size; ++i ) {
 			*(external + i) = *(msbyte - i);
 		}
 	}
@@ -96,14 +96,14 @@ struct Converter<EndianType::big, EndianType::little>
 	static void from_external(const unsigned char *external, std::size_t size, Integer &native) {
 		native = 0;
 		unsigned char * const msbyte = reinterpret_cast<unsigned char *>(&native) + size - 1;
-		for ( std::size_t i = 0; i < size; ++i ) {
+		for ( std::size_t i{0}; i < size; ++i ) {
 			*(msbyte - i) = *(external + i);
 		}
 
 		if ( std::is_signed<Integer>::value
 			 && *reinterpret_cast<const signed char *>(external) < 0 )
 		{
-			const std::size_t offset = sizeof(native) - size;
+			const std::size_t offset{sizeof(native) - size};
 			if ( offset > 0 ) {
 				// big   : MSByte -> LSByte
 				// native: LSByte -> MSByte Sign
@@ -145,7 +145,7 @@ struct Converter<EndianType::little, EndianType::little>
 		if ( std::is_signed<Integer>::value
 			 && *reinterpret_cast<const signed char *>(external + size - 1) < 0 )
 		{
-			const std::size_t offset = sizeof(native) - size;
+			const std::size_t offset{sizeof(native) - size};
 			if ( offset > 0 ) {
 				// little: LSByte -> MSByte
 				// native: LSByte -> MSByte Sign
@@ -169,7 +169,7 @@ struct Converter<EndianType::big, EndianType::big>
 	 */
 	template<typename Integer>
 	static void to_external(Integer native, unsigned char *external, std::size_t size) {
-		const std::size_t offset = sizeof(native) - size;
+		const std::size_t offset{sizeof(native) - size};
 		const unsigned char * const msbyte = reinterpret_cast<const unsigned char *>(&native) + offset;
 		std::memcpy(external, msbyte, size);
 	}
@@ -185,7 +185,7 @@ struct Converter<EndianType::big, EndianType::big>
 	template<typename Integer>
 	static void from_external(const unsigned char *external, std::size_t size, Integer &native) {
 		native = 0;
-		const std::size_t offset = sizeof(native) - size;
+		const std::size_t offset{sizeof(native) - size};
 		unsigned char * const msbyte = reinterpret_cast<unsigned char *>(&native) + offset;
 		std::memcpy(msbyte, external, size);
 
@@ -213,7 +213,7 @@ struct Converter<EndianType::little, EndianType::big>
 	template<typename Integer>
 	static void to_external(Integer native, unsigned char *external, std::size_t size) {
 		const unsigned char * const lsbyte = reinterpret_cast<unsigned char *>(&native) + sizeof(native) - 1;
-		for ( std::size_t i = 0; i < size; ++i ) {
+		for ( std::size_t i{0}; i < size; ++i ) {
 			*(external + i) = *(lsbyte - i);
 		}
 	}
@@ -230,14 +230,14 @@ struct Converter<EndianType::little, EndianType::big>
 	static void from_external(const unsigned char *external, std::size_t size, Integer &native) {
 		native = 0;
 		unsigned char * const lsbyte = reinterpret_cast<unsigned char *>(&native) + size - 1;
-		for ( std::size_t i = 0; i < size; ++i ) {
+		for ( std::size_t i{0}; i < size; ++i ) {
 			*(lsbyte - i) = *(external + i);
 		}
 
 		if ( std::is_signed<Integer>::value
 			 && *reinterpret_cast<const signed char *>(external + size - 1) < 0 )
 		{
-			const std::size_t offset = sizeof(native) - size;
+			const std::size_t offset{sizeof(native) - size};
 			if ( offset > 0 ) { 
 				// little:      LSByte -> MSByte
 				// native: Sign MSByte -> LSByte

@@ -28,7 +28,7 @@ struct TypeList;
 template<>
 struct TypeList<>
 {
-	static constexpr std::size_t size = 0;
+	static constexpr std::size_t size{0};
 
   protected:
 	~TypeList() = default;
@@ -40,7 +40,7 @@ struct TypeList<THead, TTail...>: TypeList<TTail...>
 	using head = THead;
 	using tail = TypeList<TTail...>;
 
-	static constexpr std::size_t size = sizeof...(TTail) + 1;
+	static constexpr std::size_t size{sizeof...(TTail) + 1};
 
   protected:
 	~TypeList() = default;
