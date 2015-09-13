@@ -23,23 +23,12 @@
 #include <cstdlib>
 #include <mutex>
 #include <stdexcept>
+#include "aid/Memory.hpp"
 
 
 namespace aid {
 
 using AtExitFunction	= void (*)();
-
-template<class Object>
-struct CreateUsingNew
-{
-	static Object *create() {
-		return new Object;
-	}
-
-	static void destroy(Object *p) {
-		delete p;
-	}
-}; // struct CreateUsingNew
 
 template<class Object>
 struct DefaultLifetime
@@ -56,20 +45,22 @@ struct DefaultLifetime
 
 template<
 	typename Object
-	, template<class> class CreationPolicy = CreateUsingNew
+	, class Allocator = PrivateAllocator<Object>
 	, template<class> class LifetimePolicy = DefaultLifetime
 	>
 class Singleton
 {
   private:
 	using object_ptr_type		= Object * volatile;
+	using creator_type			= Creator<Object, Allocator>;
 
   public:
 	using object_type			= Object;
-	using creation_policy_type	= CreationPolicy<Object>;
+	using allocator_type		= Allocator;
 	using lifetime_policy_type	= LifetimePolicy<Object>;
 
   private:
+	static creator_type			s_creator;
 	static std::mutex			s_mutex;
 	static object_ptr_type		s_instance;
 	static bool					s_destroyed;
@@ -86,14 +77,14 @@ class Singleton
 			lifetime_policy_type::on_dead_reference();
 		}
 
-		s_instance = creation_policy_type::create();
+		s_instance = s_creator.create();
 		lifetime_policy_type::schedule_destruction(
 		  s_instance, &destroy_singleton);
 	}
 
 	static void destroy_singleton() {
 		assert(!s_destroyed);
-		creation_policy_type::destroy(s_instance);
+		s_creator.destroy(s_instance);
 		s_instance = nullptr;
 		s_destroyed = true;
 	}
@@ -112,25 +103,33 @@ class Singleton
 
 template<
 	typename Object
-	, template<class> class CreationPolicy
+	, class Allocator
 	, template<class> class LifetimePolicy
 	>
-std::mutex Singleton<Object, CreationPolicy, LifetimePolicy>::s_mutex;
+typename Singleton<Object, Allocator, LifetimePolicy>::creator_type
+Singleton<Object, Allocator, LifetimePolicy>::s_creator;
 
 template<
 	typename Object
-	, template<class> class CreationPolicy
+	, class Allocator
 	, template<class> class LifetimePolicy
 	>
-typename Singleton<Object, CreationPolicy, LifetimePolicy>::object_ptr_type
-Singleton<Object, CreationPolicy, LifetimePolicy>::s_instance = nullptr;
+std::mutex Singleton<Object, Allocator, LifetimePolicy>::s_mutex;
+
+template<
+	typename Object
+	, class Allocator
+	, template<class> class LifetimePolicy
+	>
+typename Singleton<Object, Allocator, LifetimePolicy>::object_ptr_type
+Singleton<Object, Allocator, LifetimePolicy>::s_instance = nullptr;
 	
 template<
 	typename Object
-	, template<class> class CreationPolicy
+	, class Allocator
 	, template<class> class LifetimePolicy
 	>
-bool Singleton<Object, CreationPolicy, LifetimePolicy>::s_destroyed = false;
+bool Singleton<Object, Allocator, LifetimePolicy>::s_destroyed = false;
 
 } // namespace aid
 

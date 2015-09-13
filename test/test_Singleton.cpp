@@ -43,7 +43,7 @@ class MyFactory
 {
   public:
 	using holder_type = aid::Singleton<MyFactory>;
-	friend holder_type::creation_policy_type;
+	friend holder_type::allocator_type;
 	friend holder_type::lifetime_policy_type;
 
   private:
